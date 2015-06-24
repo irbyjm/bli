@@ -15,8 +15,12 @@ def populate_sensors(line, sensors):
 	if line.strip():
 		temp = line.split()
 		if temp[0][0] != "#":
-			sensors[temp[1]] = {}
-			sensors[temp[1]]['ip'] = temp[0]
+			sensors[temp[0]] = {}
+			if len(temp) == 2:
+				sensors[temp[0]]['hostname'] = temp[1]
+			else:
+				sensors[temp[0]]['hostname'] = ""
+			sensors[temp[0]]['crashlogs'] = 0
 
 def menu():
 	print 
@@ -30,18 +34,18 @@ def menu():
 	print "-"*30
 
 def getstatus(sensors):
-        for hostname in sensors:
+        for ip in sensors:
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 try:
                         ssh.connect(
-                                sensors[hostname]['ip'],
+                                ip,
                                 username = sshuser,
                                 key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
                                 timeout = 10
                         )
 			(stdin, stdout, stderr) = ssh.exec_command("ls " + spooltmp + "|grep crash |wc -l")
-			sensors[hostname]['crashlogs'] = stdout.readline().strip()
+			sensors[ip]['crashlogs'] = int(stdout.readline().strip())
                         (stdin, stdout, stderr) = ssh.exec_command(broctl + " status")
 			lines = running = stopped = crashed = 0
 			for line in stdout.readlines():
@@ -54,24 +58,44 @@ def getstatus(sensors):
 					elif "crashed" in line:
 						crashed += 1
 			if running == lines:
-				sensors[hostname]['status'] = "BrOK, " + sensors[hostname]['crashlogs'] + " crash logs"
+				sensors[ip]['status'] = "OK, " + str(sensors[ip]['crashlogs']) + " crash logs"
 			else:
-				sensors[hostname]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + sensors[hostname]['crashlogs'] + " crash logs)"
+				sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			ssh.close()
                 except Exception as e:
-                        sensors[hostname]['status'] = e
+                        sensors[ip]['status'] = e
 	print "\nStatus loaded..."
 	raw_input("<Press Enter to continue> ")
 	return 1
 
 def clearlogs(sensors):
-	NULL
+	cleared = 0
+        for ip in sensors:
+		if sensors[ip]['crashlogs'] > 0:
+	                ssh = paramiko.SSHClient()
+	                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	                try:
+	                        ssh.connect(
+	                                ip,
+	                                username = sshuser,
+	                                key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
+	                                timeout = 10
+	                        )
+	                        (stdin, stdout, stderr) = ssh.exec_command("rm -rf " + spooltmp + "/*crash")
+	                        ssh.close()
+				cleared += 1
+				print "\nLogs cleared from", ip, "..."
+	                except Exception as e:
+	                        sensors[hostname]['status'] = e
+	if cleared == 0:
+		print "\nNo log(s) cleared..."
+	raw_input("<Press Enter to continue> ")
 
 def printstatus(sensors):
-	print "\n{:20s} : {:15s} : {}".format("Hostname", "IP Address", "Status")
+	print "\n{:15s} : {:20s} : {}".format("IP Address", "Hostname", "Status")
 	print "-"*47
-	for sensor in sensors:
-		print "{:20s} : {:15s} : {}".format(sensor, sensors[sensor]['ip'], sensors[sensor]['status'])
+	for ip in sensors:
+		print "{:15s} : {:20s} : {}".format(ip, sensors[ip]['hostname'], sensors[ip]['status'])
 	raw_input("<Press Enter to continue> ")
 
 def getsensors(sensors):
@@ -85,11 +109,15 @@ def main():
 	loaded = decision = 0
 	while decision != 9:
 		menu()
-		decision = input("\naction> ")
+		try:
+			decision = input("\naction> ")
+		except Exception as e:
+			decision = 666
+	
 		if decision == 0:
 			loaded = getstatus(sensors)
 		elif decision == 9:
-			print "Exiting..."
+			print "\nExiting..."
 		else:
 			if loaded:
 				if decision == 1:
