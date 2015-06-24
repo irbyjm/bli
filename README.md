@@ -1,5 +1,4 @@
 # bli
-Brommand Line Interface
 
 Sample sensor.txt
 ```
