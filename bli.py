@@ -12,17 +12,22 @@ broctl = os.path.join(prefix, "bin", "broctl")
 spooltmp = "/home/irbyjm/bro/spool/tmp"
 
 def populate_sensors(line, sensors):
-	temp = line.split()
-	if temp[0][0] != "#":
-		sensors[temp[1]] = {}
-		sensors[temp[1]]['ip'] = temp[0]
+	if line.strip():
+		temp = line.split()
+		if temp[0][0] != "#":
+			sensors[temp[1]] = {}
+			sensors[temp[1]]['ip'] = temp[0]
 
 def menu():
-	print "-----------------------------"
-	print "Brommand Line Interface (BLI)\n"
-	print "(0) Get status"
-	print "(1) Print status"
-	print "(9) Quit"
+	print 
+	print "-"*30
+	print "|{:^28s}|".format("Brommand Line Interface")
+	print "-"*30
+	print "|{:28s}|".format(" (0) Get status")
+	print "|{:28s}|".format(" (1) Print status")
+	print "|{:28s}|".format(" (2) Clear crash logs")
+	print "|{:28s}|".format(" (9) Quit")
+	print "-"*30
 
 def getstatus(sensors):
         for hostname in sensors:
@@ -56,14 +61,18 @@ def getstatus(sensors):
                 except Exception as e:
                         sensors[hostname]['status'] = e
 	print "\nStatus loaded..."
-	print raw_input("<Press Enter to continue>")
+	raw_input("<Press Enter to continue> ")
 	return 1
+
+def clearlogs(sensors):
+	NULL
 
 def printstatus(sensors):
 	print "\n{:20s} : {:15s} : {}".format("Hostname", "IP Address", "Status")
+	print "-"*47
 	for sensor in sensors:
 		print "{:20s} : {:15s} : {}".format(sensor, sensors[sensor]['ip'], sensors[sensor]['status'])
-	raw_input("<Press Enter to continue>")
+	raw_input("<Press Enter to continue> ")
 
 def getsensors(sensors):
 	sensor_list = open(sensor_file, "r")
@@ -73,21 +82,23 @@ def getsensors(sensors):
 def main():
 	sensors = {}
 	getsensors(sensors)
-	loaded = 0
-	decision = 0
+	loaded = decision = 0
 	while decision != 9:
 		menu()
-		decision = input("action> ")
+		decision = input("\naction> ")
 		if decision == 0:
 			loaded = getstatus(sensors)
-		elif decision == 1:
-			if loaded:
-				printstatus(sensors)
-			else:
-				print "\nStatus not yet loaded (get status)"
-				raw_input("<Press Enter to continue>")
 		elif decision == 9:
 			print "Exiting..."
+		else:
+			if loaded:
+				if decision == 1:
+					printstatus(sensors)
+				elif decision == 2:
+					clearlogs(sensors)
+			else:
+				print "\nStatus not yet loaded (get status)"
+				raw_input("<Press Enter to continue> ")
 
 ######
 main()
