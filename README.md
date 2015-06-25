@@ -2,20 +2,20 @@
 
 Sample sensor.txt
 ```
-#ip,hostname,prefix,spooltmp
-127.0.0.1,localhost,,
-172.16.29.42,,,
-
-192.168.8.180,testhost1,,
-#192.168.8.181,testhost2,,
+#ip,hostname,sshuser,prefix,spooltmp
+#127.0.0.1,localhost,,,
+192.168.8.168,testhost1,root,/usr/local/bro,
+192.168.8.169,testhost2,root,/usr/local/bro,
+192.168.8.155,testhost4,root,/usr/local/bro,
+192.168.8.180,testhost3,,,
 ```
 
 Sample app output:
 ```
-IP Address      : Hostname             : Status
------------------------------------------------
-172.16.29.42    :                      : timed out
-192.168.8.180   : testhost1            : timed out
-127.0.0.1       : localhost            : Unhealthy (2 running, 0 stopped, 1 crashed, 2 crash logs)
-
+IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Status
+------------------------------------------------------------------------------------------------------------------------
+192.168.8.155   : testhost4            : root       : /usr/local/bro       : /data/bro/spool/tmp  : BrOK, 51 crash logs
+192.168.8.180   : testhost3            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : Unhealthy (21 running, 0 stopped, 1 crashed, 383 crash logs)
+192.168.8.169   : testhost2            : root       : /usr/local/bro       : /data/bro/spool/tmp  : BrOK, 14 crash logs
+192.168.8.168   : testhost1            : root       : /usr/local/bro       : /data/bro/spool/tmp  : BrOK, 29 crash logs
 ```
