@@ -4,12 +4,14 @@
 
 import os
 import paramiko
+import logging
 
-sshuser = "irbyjm"
+# defaults
+sshuser = "broadmin"
 sensor_file = "sensor.txt"
-prefix = "/home/irbyjm/bro"
-broctl = os.path.join(prefix, "bin", "broctl")
-spooltmp = "/home/irbyjm/bro/spool/tmp"
+prefix = "/opt/bro"
+spooltmp = "/data/bro/spool/tmp"
+#logging.basicConfig()
 
 def populate_sensors(line, sensors):
 	if line:
@@ -18,17 +20,29 @@ def populate_sensors(line, sensors):
 			temp[-1] = temp[-1].strip()
 			sensors[temp[0]] = {}
 			sensors[temp[0]]['hostname'] = temp[1]
+			if temp[2]:
+				sensors[temp[0]]['sshuser'] = temp[2]
+			else:
+				sensors[temp[0]]['sshuser'] = sshuser
+			if temp[3]:
+				sensors[temp[0]]['prefix'] = temp[3]
+			else:
+				sensors[temp[0]]['prefix'] = prefix
+			if temp[4]:
+				sensors[temp[0]]['spooltmp'] = temp[4]
+			else:
+				sensors[temp[0]]['spooltmp'] = spooltmp
 			sensors[temp[0]]['crashlogs'] = 0
 
 def menu():
 	print 
 	print "-"*30
-	print "|{:^28s}|".format("Brommand Line Interface")
+	print "|{0:^28s}|".format("Brommand Line Interface")
 	print "-"*30
-	print "|{:28s}|".format(" (0) Get status")
-	print "|{:28s}|".format(" (1) Print status")
-	print "|{:28s}|".format(" (2) Clear crash logs")
-	print "|{:28s}|".format(" (9) Quit")
+	print "|{0:28s}|".format(" (0) Get status")
+	print "|{0:28s}|".format(" (1) Print status")
+	print "|{0:28s}|".format(" (2) Clear crash logs")
+	print "|{0:28s}|".format(" (9) Quit")
 	print "-"*30
 
 def getstatus(sensors):
@@ -38,15 +52,15 @@ def getstatus(sensors):
                 try:
                         ssh.connect(
                                 ip,
-                                username = sshuser,
+                                username = sensors[ip]['sshuser'],
                                 key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
                                 timeout = 10
                         )
-			(stdin, stdout, stderr) = ssh.exec_command("ls " + spooltmp + "|grep crash |wc -l")
+			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[ip]['spooltmp'] + "|grep crash |wc -l")
 			sensors[ip]['crashlogs'] = int(stdout.readline().strip())
-                        (stdin, stdout, stderr) = ssh.exec_command(broctl + " status")
+                        (stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[ip]['prefix'], "bin", "broctl") + " status")
 			lines = running = stopped = crashed = 0
-			for line in stdout.readlines():
+			for line in stderr.readlines():
 				if "manager" in line or "proxy" in line or "worker" in line or "standalone" in line:
 					lines += 1
 					if "running" in line:
@@ -55,8 +69,9 @@ def getstatus(sensors):
 						stopped += 1
 					elif "crashed" in line:
 						crashed += 1
+			for line in stderr.readlines(): print line
 			if running == lines:
-				sensors[ip]['status'] = "OK, " + str(sensors[ip]['crashlogs']) + " crash logs"
+				sensors[ip]['status'] = "BrOK, " + str(sensors[ip]['crashlogs']) + " crash logs"
 			else:
 				sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			ssh.close()
@@ -75,11 +90,11 @@ def clearlogs(sensors):
 	                try:
 	                        ssh.connect(
 	                                ip,
-	                                username = sshuser,
+	                                username = sensors[ip]['sshuser'],
 	                                key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 	                                timeout = 10
 	                        )
-	                        (stdin, stdout, stderr) = ssh.exec_command("rm -rf " + spooltmp + "/*crash")
+	                        (stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[ip]['spooltmp'] + "/*crash")
 	                        ssh.close()
 				cleared += 1
 				print "\nLogs cleared from", ip, "..."
@@ -90,10 +105,10 @@ def clearlogs(sensors):
 	raw_input("<Press Enter to continue> ")
 
 def printstatus(sensors):
-	print "\n{:15s} : {:20s} : {}".format("IP Address", "Hostname", "Status")
-	print "-"*47
+	print "\n{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format("IP Address", "Hostname", "User", "Prefix", "SpoolTmp", "Status")
+	print "-"*120
 	for ip in sensors:
-		print "{:15s} : {:20s} : {}".format(ip, sensors[ip]['hostname'], sensors[ip]['status'])
+		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(ip, sensors[ip]['hostname'], sensors[ip]['sshuser'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['status'])
 	raw_input("<Press Enter to continue> ")
 
 def getsensors(sensors):
@@ -121,7 +136,7 @@ def main():
 				if decision == 1:
 					printstatus(sensors)
 				elif decision == 2:
-					clearlogs(sensors)
+					clearlogs(sensors)	
 			else:
 				print "\nStatus not yet loaded (get status)"
 				raw_input("<Press Enter to continue> ")
