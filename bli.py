@@ -12,14 +12,12 @@ broctl = os.path.join(prefix, "bin", "broctl")
 spooltmp = "/home/irbyjm/bro/spool/tmp"
 
 def populate_sensors(line, sensors):
-	if line.strip():
-		temp = line.split()
+	if line:
+		temp = line.split(",")
 		if temp[0][0] != "#":
+			temp[-1] = temp[-1].strip()
 			sensors[temp[0]] = {}
-			if len(temp) == 2:
-				sensors[temp[0]]['hostname'] = temp[1]
-			else:
-				sensors[temp[0]]['hostname'] = ""
+			sensors[temp[0]]['hostname'] = temp[1]
 			sensors[temp[0]]['crashlogs'] = 0
 
 def menu():

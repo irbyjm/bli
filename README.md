@@ -2,11 +2,11 @@
 
 Sample sensor.txt
 ```
-#IP Address     Hostname
-127.0.0.1       localhost
-192.168.8.180   testhost1
-#192.168.8.181  testhost2
-172.16.24.19
+#ip,hostname,prefix,spooltmp
+127.0.0.1,localhost,,
+192.168.8.180,testhost1,,
+#192.168.8.181,testhost2,,
+172.16.24.19,,,
 ```
 
 Sample app output:
