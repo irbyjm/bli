@@ -2,8 +2,8 @@
 # Brommand Line Interface (20150623 : irbyjm)
 # "Quick-and-dirty" manager for remote Bro instances
 
-import paramiko
 import os
+import paramiko
 
 sshuser = "irbyjm"
 sensor_file = "sensor.txt"
@@ -49,7 +49,7 @@ def getstatus(sensors):
                         (stdin, stdout, stderr) = ssh.exec_command(broctl + " status")
 			lines = running = stopped = crashed = 0
 			for line in stdout.readlines():
-				if "manager" in line or "proxy" in line or "worker" in line:
+				if "manager" in line or "proxy" in line or "worker" in line or "standalone" in line:
 					lines += 1
 					if "running" in line:
 						running += 1
@@ -70,7 +70,7 @@ def getstatus(sensors):
 
 def clearlogs(sensors):
 	cleared = 0
-        for ip in sensors:
+	for ip in sensors:
 		if sensors[ip]['crashlogs'] > 0:
 	                ssh = paramiko.SSHClient()
 	                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -86,7 +86,7 @@ def clearlogs(sensors):
 				cleared += 1
 				print "\nLogs cleared from", ip, "..."
 	                except Exception as e:
-	                        sensors[hostname]['status'] = e
+	                        sensors[ip]['status'] = e
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
 	raw_input("<Press Enter to continue> ")
