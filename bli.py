@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 # Brommand Line Interface (20150623 : irbyjm)
 # "Quick-and-dirty" manager for remote Bro instances
+#
+# Tested against broctl 1.3-1.4
+# 	broctl 1.3 may use stderr for 'status'
+#	broctl 1.4 may use stdout for 'status'
+#	stick 2>&1 to squash any issues with that (?)
+
 
 import os
+import sys
 import paramiko
-import logging
+#import logging
 
 # defaults
 sshuser = "broadmin"
@@ -59,8 +66,10 @@ def getstatus(sensors):
 			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[ip]['spooltmp'] + "|grep crash |wc -l")
 			sensors[ip]['crashlogs'] = int(stdout.readline().strip())
                         (stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[ip]['prefix'], "bin", "broctl") + " status")
-			lines = running = stopped = crashed = 0
+			lines = running = stopped = crashed = warnings = 0
 			for line in stderr.readlines():
+				if "warning" in line:
+					warnings += 1
 				if "manager" in line or "proxy" in line or "worker" in line or "standalone" in line:
 					lines += 1
 					if "running" in line:
@@ -71,14 +80,13 @@ def getstatus(sensors):
 						crashed += 1
 			for line in stderr.readlines(): print line
 			if running == lines:
-				sensors[ip]['status'] = "BrOK, " + str(sensors[ip]['crashlogs']) + " crash logs"
+				sensors[ip]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			else:
-				sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+				sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			ssh.close()
                 except Exception as e:
                         sensors[ip]['status'] = e
 	print "\nStatus loaded..."
-	raw_input("<Press Enter to continue> ")
 	return 1
 
 def clearlogs(sensors):
@@ -102,14 +110,18 @@ def clearlogs(sensors):
 	                        sensors[ip]['status'] = e
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
-	raw_input("<Press Enter to continue> ")
 
 def printstatus(sensors):
 	print "\n{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format("IP Address", "Hostname", "User", "Prefix", "SpoolTmp", "Status")
 	print "-"*120
 	for ip in sensors:
 		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(ip, sensors[ip]['hostname'], sensors[ip]['sshuser'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['status'])
-	raw_input("<Press Enter to continue> ")
+
+def printusage():
+	print "usage: ./bli.py [option]"
+	print "Options:"
+	print "{0:10s}: print downstream health".format("status")
+	print "{0:10s}: clear crash logs".format("clearlogs")
 
 def getsensors(sensors):
 	sensor_list = open(sensor_file, "r")
@@ -120,26 +132,40 @@ def main():
 	sensors = {}
 	getsensors(sensors)
 	loaded = decision = 0
-	while decision != 9:
-		menu()
-		try:
-			decision = input("\naction> ")
-		except Exception as e:
-			decision = 666
-	
-		if decision == 0:
-			loaded = getstatus(sensors)
-		elif decision == 9:
-			print "\nExiting..."
-		else:
-			if loaded:
-				if decision == 1:
-					printstatus(sensors)
-				elif decision == 2:
-					clearlogs(sensors)	
+	if len(sys.argv) == 1:
+		while decision != 9:
+			menu()
+			try:
+				decision = input("\naction> ")
+			except Exception as e:
+				decision = 666
+		
+			if decision == 0:
+				loaded = getstatus(sensors)
+				raw_input("\n<Press Enter to continue>")
+			elif decision == 9:
+				print "\nExiting..."
 			else:
-				print "\nStatus not yet loaded (get status)"
-				raw_input("<Press Enter to continue> ")
+				if loaded:
+					if decision == 1:
+						printstatus(sensors)
+						raw_input("\n<Press Enter to continue>")
+					elif decision == 2:
+						clearlogs(sensors)
+						raw_input("\n<Press Enter to continue>")
+				else:
+					print "\nStatus not yet loaded (get status)"
+	elif len(sys.argv) == 2:
+		if sys.argv[1].lower() == "status":
+			getstatus(sensors)
+			printstatus(sensors)
+		elif sys.argv[1].lower() == "clearlogs":
+			getstatus(sensorS)
+			clearlogs(sensors)
+		else:
+			printusage()
+	else:
+		printusage()
 
 ######
 main()
