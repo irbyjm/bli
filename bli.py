@@ -54,10 +54,10 @@ def getstatus(sensors):
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		try:
 			ssh.connect(
-						ip,
-						username = sensors[ip]['sshuser'],
-						key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
-						timeout = 10
+				ip,
+				username = sensors[ip]['sshuser'],
+				key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
+				timeout = 10
 			)
 			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[ip]['spooltmp'] + "|grep crash |wc -l")
 			sensors[ip]['crashlogs'] = int(stdout.readline().strip())
@@ -92,10 +92,10 @@ def clearlogs(sensors):
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			try:
 				ssh.connect(
-							ip,
-							username = sensors[ip]['sshuser'],
-							key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
-							timeout = 10
+					ip,
+					username = sensors[ip]['sshuser'],
+					key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
+					timeout = 10
 				)
 				(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[ip]['spooltmp'] + "/*crash")
 				ssh.close()
@@ -113,10 +113,11 @@ def printstatus(sensors):
 		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(ip, sensors[ip]['hostname'], sensors[ip]['sshuser'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['status'])
 
 def printusage():
-	print "usage: ./bli.py [option]"
+	print "Usage: bli.py [OPTION]"
 	print "Options:"
-	print "{0:10s}: print downstream health".format("status")
-	print "{0:10s}: clear crash logs".format("clearlogs")
+	print "  {0:20s} print downstream health".format("status")
+	print "  {0:20s} clear crash logs".format("clearlogs")
+	print "  {0:20s} give this help list".format("-?, --help")
 
 def getsensors(sensors):
 	sensor_list = open(sensor_file, "r")
@@ -134,7 +135,6 @@ def main():
 				decision = input("\naction> ")
 			except Exception as e:
 				decision = 666
-
 			if decision == 0:
 				loaded = getstatus(sensors)
 				raw_input("\n<Press Enter to continue>")
@@ -151,16 +151,20 @@ def main():
 				else:
 					print "\nStatus not yet loaded (get status)"
 	elif len(sys.argv) == 2:
-		if sys.argv[1].lower() == "status":
+		if sys.argv[1] == "status":
 			getstatus(sensors)
 			printstatus(sensors)
-		elif sys.argv[1].lower() == "clearlogs":
+		elif sys.argv[1] == "clearlogs":
 			getstatus(sensors)
 			clearlogs(sensors)
-		else:
+		elif sys.argv[1] == "-?" or sys.argv[1] == "--help":
 			printusage()
+		else:
+			print sys.argv[0] + ": invalid option:", sys.argv[1]
+			print "Try '" + sys.argv[0] + " --help' for more information."
 	else:
-		printusage()
+		print sys.argv[0] + ": too many arguments"
+		print "Try '" + sys.argv[0] + " --help' for more information."
 
 ######
 main()
