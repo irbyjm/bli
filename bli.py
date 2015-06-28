@@ -59,13 +59,19 @@ def getstatus(sensors):
 				key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 				timeout = 10
 			)
+			lines = running = stopped = crashed = warnings = fnf_prefix = fnf_spool = 0
 			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[ip]['spooltmp'] + "|grep crash |wc -l")
-			sensors[ip]['crashlogs'] = int(stdout.readline().strip())
+			for line in stderr.readlines():
+				if "No such file" in line:
+					fnf_spool = 1
+			if not fnf_spool:
+				sensors[ip]['crashlogs'] = int(stdout.readline().strip())
 			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[ip]['prefix'], "bin", "broctl") + " status 2>&1")
-			lines = running = stopped = crashed = warnings = 0
 			for line in stdout.readlines():
 				if "warning" in line:
 					warnings += 1
+				if "No such file" in line:
+					fnf_prefix = 1
 				if "manager" in line or "proxy" in line or "worker" in line or "standalone" in line:
 					lines += 1
 					if "running" in line:
@@ -74,10 +80,17 @@ def getstatus(sensors):
 						stopped += 1
 					elif "crashed" in line:
 						crashed += 1
-			if running == lines:
-				sensors[ip]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
-			else:
-				sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+			if not fnf_prefix and not fnf_spool:
+				if running == lines:
+					sensors[ip]['status'] = "OK (" + 	str(warnings) + " warnings, " + 	str(sensors[ip]['crashlogs']) + " crash logs)"
+				else:
+					sensors[ip]['status'] = "Unhealthy (" + 	str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+			elif fnf_prefix and not fnf_spool:
+				sensors[ip]['status'] = "ERROR (broctl not found; validate prefix setting)"
+			elif fnf_spool and not fnf_prefix:
+				sensors[ip]['status'] = "ERROR (Bro spool not found; validate spooltmp setting)"
+			elif fnf_prefix and fnf_spool:
+				sensors[ip]['status'] = "ERROR (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
 			sensors[ip]['status'] = e
