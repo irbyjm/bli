@@ -1,17 +1,12 @@
 #!/usr/bin/env python
-# Brommand Line Interface (20150623 : irbyjm)
-# "Quick-and-dirty" manager for remote Bro instances
-#
-# Tested against broctl 1.3-1.4
-
 import os
 import sys
 import paramiko
 #import logging
 
 # defaults
+sensor_file = "sensor.csv"
 sshuser = "broadmin"
-sensor_file = "sensor.txt"
 prefix = "/opt/bro"
 spooltmp = "/data/bro/spool/tmp"
 #logging.basicConfig()
@@ -86,11 +81,11 @@ def getstatus(sensors):
 				else:
 					sensors[ip]['status'] = "Unhealthy (" + 	str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			elif fnf_prefix and not fnf_spool:
-				sensors[ip]['status'] = "ERROR (broctl not found; validate prefix setting)"
+				sensors[ip]['status'] = "Error (broctl not found; validate prefix setting)"
 			elif fnf_spool and not fnf_prefix:
-				sensors[ip]['status'] = "ERROR (Bro spool not found; validate spooltmp setting)"
+				sensors[ip]['status'] = "Error (Bro spool not found; validate spooltmp setting)"
 			elif fnf_prefix and fnf_spool:
-				sensors[ip]['status'] = "ERROR (broctl and spool not found; validate path settings)"
+				sensors[ip]['status'] = "Error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
 			sensors[ip]['status'] = e
