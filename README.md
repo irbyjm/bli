@@ -3,7 +3,7 @@
 Sample sensor.csv
 ```
 #ip,hostname,sshuser,prefix,spooltmp
-#127.0.0.1,localhost,,,
+127.0.0.1,localhost,,,
 192.168.8.168,testhost1,root,/usr/local/bro,
 192.168.8.169,testhost2,root,/usr/local/bro,
 192.168.8.155,testhost4,root,/usr/local/bro,
