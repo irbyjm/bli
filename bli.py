@@ -104,11 +104,6 @@ def get_status(sensors):
 					elif "crashed" in line:
 						crashed += 1
 
-			(stdin, stdout, stderr) = ssh.exec_command("find " + os.path.join(sensors[ip]['prefix'], "etc/* -exec md5sum '{}' \;"))
-			for line in stdout.readlines():
-				line = line.strip().split()
-				line[1] = line[1].split("/")
-				sensors[ip]['policyfile'][line[1][-1]] = line[0]
 			(stdin, stdout, stderr) = ssh.exec_command("find " + os.path.join(sensors[ip]['prefix'], "share/bro/site/* -exec md5sum '{}' \;"))
 			for line in stdout.readlines():
 				line = line.strip().split()
