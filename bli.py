@@ -48,6 +48,7 @@ def populate_sensors(line, sensors):
 			sensors[temp[0]]['crashlogs'] = 0
 			sensors[temp[0]]['policyfile'] = {}
 
+			# there has to be a cleaner way to write these (blah(?)y:n)?
 			if temp[2]:
 				sensors[temp[0]]['sshuser'] = temp[2]
 			else:
@@ -107,14 +108,17 @@ def get_status(sensors):
 			(stdin, stdout, stderr) = ssh.exec_command("find " + os.path.join(sensors[ip]['prefix'], "share/bro/site/* -exec md5sum '{}' \;"))
 			for line in stdout.readlines():
 				line = line.strip().split()
-				line[1] = line[1].split("/")
+				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share/bro/site/"))
 				sensors[ip]['policyfile'][line[1][-1]] = line[0]
+			print sensors[ip]['policyfile']
+			# monitor configs with various subfolders should track same
+			# filenames across different prefixes and nests.
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
-					sensors[ip]['status'] = "OK (" + 	str(warnings) + " warnings, " + 	str(sensors[ip]['crashlogs']) + " crash logs)"
+					sensors[ip]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 				else:
-					sensors[ip]['status'] = "Unhealthy (" + 	str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+					sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
 			elif fnf_prefix and not fnf_spool:
 				sensors[ip]['status'] = "Error (broctl not found; validate prefix setting)"
 			elif fnf_spool and not fnf_prefix:
