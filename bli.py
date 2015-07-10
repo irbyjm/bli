@@ -2,15 +2,13 @@
 import os
 import sys
 import paramiko
-#import logging
 
 # defaults
 sensor_file = "sensor.csv"
-sshuser = "broadmin"
+ssh_user = "broadmin"
 prefix = "/opt/bro"
 spooltmp = "/data/bro/spool/tmp"
 policy = "phys"
-#logging.basicConfig()
 
 def print_usage():
 	print "Usage: bli.py [OPTION]"
@@ -32,7 +30,8 @@ def menu():
 	print "-"*30
 
 def get_sensors(sensors):
-	sensor_list = open(sensor_file, "r")
+	sensor_file_path = "/".join(sys.argv[0].split("/")[0:-1])
+	sensor_list = open(os.path.join(sensor_file_path, sensor_file), "r")
 
 	for line in sensor_list:
 		populate_sensors(line, sensors)
@@ -50,9 +49,9 @@ def populate_sensors(line, sensors):
 
 			# there has to be a cleaner way to write these (blah(?)y:n)?
 			if temp[2]:
-				sensors[temp[0]]['sshuser'] = temp[2]
+				sensors[temp[0]]['ssh_user'] = temp[2]
 			else:
-				sensors[temp[0]]['sshuser'] = sshuser
+				sensors[temp[0]]['ssh_user'] = ssh_user
 
 			if temp[3]:
 				sensors[temp[0]]['prefix'] = temp[3]
@@ -77,7 +76,7 @@ def get_status(sensors):
 		try:
 			ssh.connect(
 				ip,
-				username = sensors[ip]['sshuser'],
+				username = sensors[ip]['ssh_user'],
 				key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 				timeout = 10
 			)
@@ -110,7 +109,7 @@ def get_status(sensors):
 				line = line.strip().split()
 				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share/bro/site/"))
 				sensors[ip]['policyfile'][line[1][-1]] = line[0]
-			print sensors[ip]['policyfile']
+			# print sensors[ip]['policyfile']
 			# monitor configs with various subfolders should track same
 			# filenames across different prefixes and nests.
 
@@ -137,7 +136,7 @@ def print_status(sensors):
 	print "-"*120
 
 	for ip in sensors:
-		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format(ip, sensors[ip]['hostname'], sensors[ip]['sshuser'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy'], sensors[ip]['status'])
+		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy'], sensors[ip]['status'])
 
 def clear_logs(sensors):
 	cleared = 0
@@ -150,7 +149,7 @@ def clear_logs(sensors):
 			try:
 				ssh.connect(
 					ip,
-					username = sensors[ip]['sshuser'],
+					username = sensors[ip]['ssh_user'],
 					key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 					timeout = 10
 				)
