@@ -15,7 +15,7 @@ def print_usage():
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
 	print "  {0:20s} clear crash logs".format("clear_logs")
-	print "  {0:20s} compare policy".format("compare_policy")
+#	print "  {0:20s} compare policy".format("compare_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
 
 def menu():
@@ -110,8 +110,6 @@ def get_status(sensors):
 				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share/bro/site/"))
 				sensors[ip]['policyfile'][line[1][-1]] = line[0]
 			# print sensors[ip]['policyfile']
-			# monitor configs with various subfolders should track same
-			# filenames across different prefixes and nests.
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
