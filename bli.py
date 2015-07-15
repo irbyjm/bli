@@ -5,10 +5,10 @@ import paramiko
 
 # defaults
 sensor_file = "sensor.csv"
-ssh_user = "broadmin"
-prefix = "/opt/bro"
-spooltmp = "/data/bro/spool/tmp"
-policy = "phys"
+ssh_user    = "broadmin"
+prefix      = "/opt/bro"
+spooltmp    = "/data/bro/spool/tmp"
+policy      = "phys"
 
 def print_usage():
 	print "Usage: bli.py [OPTION]"
@@ -19,8 +19,7 @@ def print_usage():
 	print "  {0:20s} give this help list".format("-?, --help")
 
 def menu():
-	print
-	print "-"*30
+	print "\n", "-"*30
 	print "|{0:^28s}|".format("Brommand Line Interface")
 	print "-"*30
 	print "|{0:28s}|".format(" (0) Get status")
@@ -33,40 +32,23 @@ def get_sensors(sensors):
 	sensor_file_path = "/".join(sys.argv[0].split("/")[0:-1])
 	sensor_list = open(os.path.join(sensor_file_path, sensor_file), "r")
 
-	for line in sensor_list:
-		populate_sensors(line, sensors)
+	for sensor in sensor_list:
+		populate_sensors(sensor, sensors)
 
-def populate_sensors(line, sensors):
-	if line:
-		temp = line.split(",")
+def populate_sensors(sensor, sensors):
+	if sensor:
+		line = sensor.split(",")
 
-		if temp[0][0] != "#":
-			temp[-1] = temp[-1].strip()
-			sensors[temp[0]] = {}
-			sensors[temp[0]]['hostname'] = temp[1]
-			sensors[temp[0]]['crashlogs'] = 0
-			sensors[temp[0]]['policyfile'] = {}
-
-			# there has to be a cleaner way to write these (blah(?)y:n)?
-			if temp[2]:
-				sensors[temp[0]]['ssh_user'] = temp[2]
-			else:
-				sensors[temp[0]]['ssh_user'] = ssh_user
-
-			if temp[3]:
-				sensors[temp[0]]['prefix'] = temp[3]
-			else:
-				sensors[temp[0]]['prefix'] = prefix
-
-			if temp[4]:
-				sensors[temp[0]]['spooltmp'] = temp[4]
-			else:
-				sensors[temp[0]]['spooltmp'] = spooltmp
-
-			if temp[5]:
-				sensors[temp[0]]['policy'] = temp[5]
-			else:
-				sensors[temp[0]]['policy'] = policy
+		if line[0][0] != "#":
+			line[-1] = line[-1].strip()
+			sensors[line[0]] = {}
+			sensors[line[0]]['crashlogs']  = 0
+			sensors[line[0]]['policyfile'] = {}
+			sensors[line[0]]['hostname']   = line[1]
+			sensors[line[0]]['ssh_user']   = line[2] if line[2] else ssh_user
+			sensors[line[0]]['prefix']     = line[3] if line[3] else prefix
+			sensors[line[0]]['spooltmp']   = line[4] if line[4] else spooltmp
+			sensors[line[0]]['policy']     = line[5] if line[5] else policy
 
 def get_status(sensors):
 	for ip in sensors:
@@ -109,7 +91,7 @@ def get_status(sensors):
 				line = line.strip().split()
 				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share/bro/site/"))
 				sensors[ip]['policyfile'][line[1][-1]] = line[0]
-			# print sensors[ip]['policyfile']
+#			print sensors[ip]['policyfile']
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
@@ -165,9 +147,9 @@ def compare_policy(sensors):
 	print "\n[policy comparison not implemented]"
 
 def main():
+	loaded = decision = 0
 	sensors = {}
 	get_sensors(sensors)
-	loaded = decision = 0
 
 	if len(sys.argv) == 1:
 		while decision != 9:
