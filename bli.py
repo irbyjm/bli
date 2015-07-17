@@ -2,20 +2,25 @@
 import os
 import sys
 import paramiko
+import subprocess
+
+# definitions
+bli_path	= "/".join(sys.argv[0].split("/")[0:-1])
+policies	= ["phys"]
 
 # defaults
 sensor_file = "sensor.csv"
 ssh_user    = "broadmin"
 prefix      = "/opt/bro"
 spooltmp    = "/data/bro/spool/tmp"
-policy      = "phys"
+policy_type = "phys"
 
 def print_usage():
 	print "Usage: bli.py [OPTION]"
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
 	print "  {0:20s} clear crash logs".format("clear_logs")
-#	print "  {0:20s} compare policy".format("compare_policy")
+	print "  {0:20s} check policy".format("check_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
 
 def menu():
@@ -25,12 +30,12 @@ def menu():
 	print "|{0:28s}|".format(" (0) Get status")
 	print "|{0:28s}|".format(" (1) Print status")
 	print "|{0:28s}|".format(" (2) Clear crash logs")
+	print "|{0:28s}|".format(" (3) Check policy")
 	print "|{0:28s}|".format(" (9) Quit")
 	print "-"*30
 
 def get_sensors(sensors):
-	sensor_file_path = "/".join(sys.argv[0].split("/")[0:-1])
-	sensor_list = open(os.path.join(sensor_file_path, sensor_file), "r")
+	sensor_list = open(os.path.join(bli_path, sensor_file), "r")
 
 	for sensor in sensor_list:
 		populate_sensors(sensor, sensors)
@@ -43,12 +48,12 @@ def populate_sensors(sensor, sensors):
 			line[-1] = line[-1].strip()
 			sensors[line[0]] = {}
 			sensors[line[0]]['crashlogs']  = 0
-			sensors[line[0]]['policyfile'] = {}
+			sensors[line[0]]['policy_file'] = {}
 			sensors[line[0]]['hostname']   = line[1]
 			sensors[line[0]]['ssh_user']   = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']     = line[3] if line[3] else prefix
 			sensors[line[0]]['spooltmp']   = line[4] if line[4] else spooltmp
-			sensors[line[0]]['policy']     = line[5] if line[5] else policy
+			sensors[line[0]]['policy_type']= line[5] if line[5] else policy_type
 
 def get_status(sensors):
 	for ip in sensors:
@@ -86,12 +91,11 @@ def get_status(sensors):
 					elif "crashed" in line:
 						crashed += 1
 
-			(stdin, stdout, stderr) = ssh.exec_command("find " + os.path.join(sensors[ip]['prefix'], "share/bro/site/* -exec md5sum '{}' \;"))
+			(stdin, stdout, stderr) = ssh.exec_command("find " +  os.path.join(sensors[ip]['prefix'], "share", "bro", "site", "*") + " -exec md5sum '{}' \;")
 			for line in stdout.readlines():
 				line = line.strip().split()
-				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share/bro/site/"))
-				sensors[ip]['policyfile'][line[1][-1]] = line[0]
-#			print sensors[ip]['policyfile']
+				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share", "bro", "site/"))
+				sensors[ip]['policy_file'][line[1][-1]] = line[0]
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
@@ -106,7 +110,7 @@ def get_status(sensors):
 				sensors[ip]['status'] = "Error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
-			sensors[ip]['status'] = e
+			sensors[ip]['status'] = "Error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
 	return 1
@@ -116,7 +120,7 @@ def print_status(sensors):
 	print "-"*120
 
 	for ip in sensors:
-		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy'], sensors[ip]['status'])
+		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy_type'], sensors[ip]['status'])
 
 def clear_logs(sensors):
 	cleared = 0
@@ -143,8 +147,35 @@ def clear_logs(sensors):
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
 
-def compare_policy(sensors):
-	print "\n[policy comparison not implemented]"
+def check_policy(sensors):
+	policy = {}
+	for pol in policies:
+		policy[pol] = {}
+		stdout = subprocess.Popen(
+			["find", os.path.join(bli_path, "deploy", pol, "site"), "-exec", 	"md5sum", "{}", ";"],
+			stdout = subprocess.PIPE,
+			stderr = subprocess.STDOUT,
+			universal_newlines = True
+			).stdout
+
+		for line in stdout.readlines():
+			line = line.strip().split()
+			if len(line) == 2:
+				line[1] = line[1].split(os.path.join(bli_path, "deploy", pol, "site/"))[1]
+				policy[pol][line[1]] = line[0]
+
+		print "\n{0:15s} : {1:20s} : {2:10s} : {3}".format("IP Address", "Hostname", "Issue", "File")
+		print "-"*120
+
+		for sensor in sensors:
+			if "Error" not in sensors[sensor]['status']:
+				print "{0:15s} : {1:20s} : {2:10s} :".format(sensor, sensors[sensor]['hostname'], "")
+				for policy_file in policy[sensors[sensor]['policy_type']]:
+					if policy_file in sensors[sensor]['policy_file']:
+						if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
+							print "{0:15s} : {1:20s} : {2:10s} : {3} ".format("", "", "modified", policy_file)
+					else:
+						print "{0:15s} : {1:20s} : {2:10s} : {3} ".format("", "", "missing", policy_file)
 
 def main():
 	loaded = decision = 0
@@ -173,6 +204,9 @@ def main():
 					elif decision == 2:
 						clear_logs(sensors)
 						raw_input("\n<Press Enter to continue>")
+					elif decision == 3:
+						check_policy(sensors)
+						raw_input("\n<Press Enter to continue>")
 				else:
 					print "\nStatus not yet loaded (get status)"
 
@@ -183,9 +217,9 @@ def main():
 		elif sys.argv[1] == "clear_logs":
 			get_status(sensors)
 			clear_logs(sensors)
-		elif sys.argv[1] == "compare_policy":
+		elif sys.argv[1] == "check_policy":
 			get_status(sensors)
-			compare_policy(sensors)
+			check_policy(sensors)
 		elif sys.argv[1] == "-?" or sys.argv[1] == "--help":
 			print_usage()
 		else:

@@ -10,7 +10,7 @@ Sample sensor.csv
 192.168.8.180,testhost3,,,,
 ```
 
-Sample app output:
+Sample `status` output:
 ```
 IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Policy : Status
 ------------------------------------------------------------------------------------------------------------------------
@@ -18,4 +18,15 @@ IP Address      : Hostname             : User       : Prefix               : Spo
 192.168.8.169   : testhost2            : root       : /usr/local/bro       : /data/bro/spool/tmp  : phys   : OK (0 warnings, 14 crash logs)
 192.168.8.168   : testhost1            : root       : /usr/local/bro       : /data/bro/spool/tmp  : virt   : OK (0 warnings, 29 crash logs)
 127.0.0.1       : localhost            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : phys   : [Errno 111] Connection refused
+```
+
+Sample `check_policy` output:
+```
+IP Address      : Hostname             : Issue      : File
+------------------------------------------------------------------------------------------------------------------------
+192.168.8.180   : testhost3            :            :
+                :                      : modified   : testbro/intel/bro_intel.tsv
+                :                      : missing    : local.bro.example
+192.168.8.169   : testhost2            :            :
+192.168.8.168   : testhost1            :            :
 ```

@@ -3,3 +3,6 @@ sensor.csv
 
 # backup file(s)
 *.bak
+
+# deployment folder
+deploy
