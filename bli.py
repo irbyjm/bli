@@ -47,13 +47,13 @@ def populate_sensors(sensor, sensors):
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
 			sensors[line[0]] = {}
-			sensors[line[0]]['crashlogs']  = 0
+			sensors[line[0]]['crashlogs']   = 0
 			sensors[line[0]]['policy_file'] = {}
-			sensors[line[0]]['hostname']   = line[1]
-			sensors[line[0]]['ssh_user']   = line[2] if line[2] else ssh_user
-			sensors[line[0]]['prefix']     = line[3] if line[3] else prefix
-			sensors[line[0]]['spooltmp']   = line[4] if line[4] else spooltmp
-			sensors[line[0]]['policy_type']= line[5] if line[5] else policy_type
+			sensors[line[0]]['hostname']    = line[1]
+			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
+			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
+			sensors[line[0]]['spooltmp']    = line[4] if line[4] else spooltmp
+			sensors[line[0]]['policy_type'] = line[5] if line[5] else policy_type
 
 def get_status(sensors):
 	for ip in sensors:
