@@ -19,6 +19,7 @@ def print_usage():
 	print "Usage: bli.py [OPTION]"
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
+	print "  {0:20s} print downstream config".format("config")
 	print "  {0:20s} clear crash logs".format("clear_logs")
 	print "  {0:20s} check policy".format("check_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
@@ -27,11 +28,12 @@ def menu():
 	print "\n", "-"*30
 	print "|{0:^28s}|".format("Brommand Line Interface")
 	print "-"*30
-	print "|{0:28s}|".format(" (0) Get status")
-	print "|{0:28s}|".format(" (1) Print status")
-	print "|{0:28s}|".format(" (2) Clear crash logs")
-	print "|{0:28s}|".format(" (3) Check policy")
-	print "|{0:28s}|".format(" (9) Quit")
+	print "|{0:28s}|".format(" (1) Get status")
+	print "|{0:28s}|".format(" (2) Print status")
+	print "|{0:28s}|".format(" (3) Clear crash logs")
+	print "|{0:28s}|".format(" (4) Check policy")
+	print "|{0:28s}|".format(" (9) Print configuration")
+	print "|{0:28s}|".format(" (0) Quit")
 	print "-"*30
 
 def get_sensors(sensors):
@@ -54,6 +56,13 @@ def populate_sensors(sensor, sensors):
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
 			sensors[line[0]]['spooltmp']    = line[4] if line[4] else spooltmp
 			sensors[line[0]]['policy_type'] = line[5] if line[5] else policy_type
+
+def print_config(sensors):
+	print "\n{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format("IP Address", "Hostname", "User", "Prefix", "SpoolTmp", "Policy")
+	print "-"*120
+
+	for ip in sensors:
+		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy_type'])
 
 def get_status(sensors):
 	for ip in sensors:
@@ -116,11 +125,11 @@ def get_status(sensors):
 	return 1
 
 def print_status(sensors):
-	print "\n{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format("IP Address", "Hostname", "User", "Prefix", "SpoolTmp", "Policy", "Status")
+	print "\n{0:15s} : {1:20s} : {2}".format("IP Address", "Hostname", "Status")
 	print "-"*120
 
 	for ip in sensors:
-		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5:6s} : {6}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy_type'], sensors[ip]['status'])
+		print "{0:15s} : {1:20s} : {2}".format(ip, sensors[ip]['hostname'], sensors[ip]['status'])
 
 def clear_logs(sensors):
 	cleared = 0
@@ -152,7 +161,7 @@ def check_policy(sensors):
 	for pol in policies:
 		policy[pol] = {}
 		stdout = subprocess.Popen(
-			["find", os.path.join(bli_path, "deploy", pol, "site"), "-exec", 	"md5sum", "{}", ";"],
+			["find", os.path.join(bli_path, "deploy", pol, "site"), "-exec", "md5sum", "{}", ";"],
 			stdout = subprocess.PIPE,
 			stderr = subprocess.STDOUT,
 			universal_newlines = True
@@ -178,12 +187,12 @@ def check_policy(sensors):
 						print "{0:15s} : {1:20s} : {2:10s} : {3} ".format("", "", "missing", policy_file)
 
 def main():
-	loaded = decision = 0
+	loaded = decision = None
 	sensors = {}
 	get_sensors(sensors)
 
 	if len(sys.argv) == 1:
-		while decision != 9:
+		while decision != 0:
 			menu()
 
 			try:
@@ -191,20 +200,23 @@ def main():
 			except Exception as e:
 				decision = 666
 
-			if decision == 0:
+			if decision == 1:
 				loaded = get_status(sensors)
 				raw_input("\n<Press Enter to continue>")
 			elif decision == 9:
+				print_config(sensors)
+				raw_input("\n<Press Enter to continue>")
+			elif decision == 0:
 				print "\nExiting..."
 			else:
 				if loaded:
-					if decision == 1:
+					if decision == 2:
 						print_status(sensors)
 						raw_input("\n<Press Enter to continue>")
-					elif decision == 2:
+					elif decision == 3:
 						clear_logs(sensors)
 						raw_input("\n<Press Enter to continue>")
-					elif decision == 3:
+					elif decision == 4:
 						check_policy(sensors)
 						raw_input("\n<Press Enter to continue>")
 				else:
@@ -214,6 +226,8 @@ def main():
 		if sys.argv[1] == "status":
 			get_status(sensors)
 			print_status(sensors)
+		elif sys.argv[1] == "config":
+			print_config(sensors)
 		elif sys.argv[1] == "clear_logs":
 			get_status(sensors)
 			clear_logs(sensors)
