@@ -2,19 +2,19 @@
 
 Directory structure
 ```
-           <bli root>
+        <bli root>
    /	    |		    \
 bli.py	sensor.csv	./deploy
-			/      \
-	             ./phys   ./virt
-		     /		   \
-		  ./site        ./site
-		   /		    \
-		local.bro	local.bro
-		...		...
+					/      \
+				 ./phys   ./virt
+			     /	   	    \
+			  ./site       ./site
+			   /		     \
+			local.bro	 local.bro
+			...			 ...
 ```
 
-Sample sensor.csv
+Sample `sensor.csv`
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
 127.0.0.1,localhost,,,,
