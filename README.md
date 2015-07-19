@@ -1,5 +1,19 @@
 # bli
 
+Directory structure
+```
+           <bli root>
+   /	    |		    \
+bli.py	sensor.csv	./deploy
+			/      \
+	             ./phys   ./virt
+		     /		   \
+		  ./site        ./site
+		   /		    \
+		local.bro	local.bro
+		...		...
+```
+
 Sample sensor.csv
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
