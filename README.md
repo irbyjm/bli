@@ -12,7 +12,7 @@ Sample sensor.csv
 
 Sample `config` output:
 ```
-IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Policy : Status
+IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Policy
 ------------------------------------------------------------------------------------------------------------------------
 192.168.8.180   : testhost3            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : phys
 192.168.8.169   : testhost2            : root       : /usr/local/bro       : /data/bro/spool/tmp  : phys
@@ -22,7 +22,7 @@ IP Address      : Hostname             : User       : Prefix               : Spo
 
 Sample `status` output:
 ```
-IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Policy : Status
+IP Address      : Hostname             : Status
 ------------------------------------------------------------------------------------------------------------------------
 192.168.8.180   : testhost3            : Unhealthy (21 running, 0 stopped, 1 crashed, 383 crash logs)
 192.168.8.169   : testhost2            : OK (0 warnings, 14 crash logs)
