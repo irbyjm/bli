@@ -1,6 +1,6 @@
 # bli
 
-Directory structure
+Sample directory structure
 ```
         <bli root>
    /	    |		    \
