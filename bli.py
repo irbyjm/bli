@@ -151,7 +151,7 @@ def clear_logs(sensors):
 				cleared += 1
 				print "\nLogs cleared from", sensor, "..."
 			except Exception as e:
-				sensors[sensor]['status'] = e
+				sensors[sensor]['status'] = "Error (" + str(e) + ")"
 
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
