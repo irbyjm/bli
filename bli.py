@@ -5,8 +5,8 @@ import paramiko
 import subprocess
 
 # definitions
-bli_path	= "/".join(sys.argv[0].split("/")[0:-1])
-policies	= ["phys"]
+bli_path = "/".join(sys.argv[0].split("/")[0:-1])
+policies = ["phys"]
 
 # defaults
 sensor_file = "sensor.csv"
@@ -61,31 +61,31 @@ def print_config(sensors):
 	print "\n{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format("IP Address", "Hostname", "User", "Prefix", "SpoolTmp", "Policy")
 	print "-"*120
 
-	for ip in sensors:
-		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(ip, sensors[ip]['hostname'], sensors[ip]['ssh_user'], sensors[ip]['prefix'], sensors[ip]['spooltmp'], sensors[ip]['policy_type'])
+	for sensor in sorted(sensors):
+		print "{0:15s} : {1:20s} : {2:10s} : {3:20s} : {4:20s} : {5}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['ssh_user'], sensors[sensor]['prefix'], sensors[sensor]['spooltmp'], sensors[sensor]['policy_type'])
 
 def get_status(sensors):
-	for ip in sensors:
+	for sensor in sensors:
 		ssh = paramiko.SSHClient()
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 		try:
 			ssh.connect(
-				ip,
-				username = sensors[ip]['ssh_user'],
+				sensor,
+				username = sensors[sensor]['ssh_user'],
 				key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 				timeout = 10
 			)
 			lines = running = stopped = crashed = warnings = fnf_prefix = fnf_spool = 0
 
-			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[ip]['spooltmp'] + "|grep crash |wc -l")
+			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[sensor]['spooltmp'] + "|grep crash |wc -l")
 			for line in stderr.readlines():
 				if "No such file" in line:
 					fnf_spool = 1
 			if not fnf_spool:
-				sensors[ip]['crashlogs'] = int(stdout.readline().strip())
+				sensors[sensor]['crashlogs'] = int(stdout.readline().strip())
 
-			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[ip]['prefix'], "bin", "broctl") + " status 2>&1")
+			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[sensor]['prefix'], "bin", "broctl") + " status 2>&1")
 			for line in stdout.readlines():
 				if "warning" in line:
 					warnings += 1
@@ -100,26 +100,26 @@ def get_status(sensors):
 					elif "crashed" in line:
 						crashed += 1
 
-			(stdin, stdout, stderr) = ssh.exec_command("find " +  os.path.join(sensors[ip]['prefix'], "share", "bro", "site", "*") + " -exec md5sum '{}' \;")
+			(stdin, stdout, stderr) = ssh.exec_command("find " +  os.path.join(sensors[sensor]['prefix'], "share", "bro", "site", "*") + " -exec md5sum '{}' \;")
 			for line in stdout.readlines():
 				line = line.strip().split()
-				line[1] = line[1].split(os.path.join(sensors[ip]['prefix'], "share", "bro", "site/"))
-				sensors[ip]['policy_file'][line[1][-1]] = line[0]
+				line[1] = line[1].split(os.path.join(sensors[sensor]['prefix'], "share", "bro", "site/"))
+				sensors[sensor]['policy_file'][line[1][-1]] = line[0]
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
-					sensors[ip]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+					sensors[sensor]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[sensor]['crashlogs']) + " crash logs)"
 				else:
-					sensors[ip]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[ip]['crashlogs']) + " crash logs)"
+					sensors[sensor]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[sensor]['crashlogs']) + " crash logs)"
 			elif fnf_prefix and not fnf_spool:
-				sensors[ip]['status'] = "Error (broctl not found; validate prefix setting)"
+				sensors[sensor]['status'] = "Error (broctl not found; validate prefix setting)"
 			elif fnf_spool and not fnf_prefix:
-				sensors[ip]['status'] = "Error (Bro spool not found; validate spooltmp setting)"
+				sensors[sensor]['status'] = "Error (Bro spool not found; validate spooltmp setting)"
 			elif fnf_prefix and fnf_spool:
-				sensors[ip]['status'] = "Error (broctl and spool not found; validate path settings)"
+				sensors[sensor]['status'] = "Error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
-			sensors[ip]['status'] = "Error (" + str(e) + ")"
+			sensors[sensor]['status'] = "Error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
 	return 1
@@ -128,30 +128,30 @@ def print_status(sensors):
 	print "\n{0:15s} : {1:20s} : {2}".format("IP Address", "Hostname", "Status")
 	print "-"*120
 
-	for ip in sensors:
-		print "{0:15s} : {1:20s} : {2}".format(ip, sensors[ip]['hostname'], sensors[ip]['status'])
+	for sensor in sorted(sensors):
+		print "{0:15s} : {1:20s} : {2}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['status'])
 
 def clear_logs(sensors):
 	cleared = 0
 
-	for ip in sensors:
-		if sensors[ip]['crashlogs'] > 0:
+	for sensor in sensors:
+		if sensors[sensor]['crashlogs'] > 0:
 			ssh = paramiko.SSHClient()
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 			try:
 				ssh.connect(
-					ip,
-					username = sensors[ip]['ssh_user'],
+					sensor,
+					username = sensors[sensor]['ssh_user'],
 					key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 					timeout = 10
 				)
-				(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[ip]['spooltmp'] + "/*crash")
+				(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[sensor]['spooltmp'] + "/*crash")
 				ssh.close()
 				cleared += 1
-				print "\nLogs cleared from", ip, "..."
+				print "\nLogs cleared from", sensor, "..."
 			except Exception as e:
-				sensors[ip]['status'] = e
+				sensors[sensor]['status'] = e
 
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
@@ -173,18 +173,18 @@ def check_policy(sensors):
 				line[1] = line[1].split(os.path.join(bli_path, "deploy", pol, "site/"))[1]
 				policy[pol][line[1]] = line[0]
 
-		print "\n{0:15s} : {1:20s} : {2:10s} : {3}".format("IP Address", "Hostname", "Issue", "File")
+		print "\n{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4}".format("IP Address", "Hostname", "Policy", "Issue", "File")
 		print "-"*120
 
-		for sensor in sensors:
+		for sensor in sorted(sensors):
 			if "Error" not in sensors[sensor]['status']:
-				print "{0:15s} : {1:20s} : {2:10s} :".format(sensor, sensors[sensor]['hostname'], "")
+				print "{0:15s} : {1:20s} : {2:6s} : {3:8s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "")
 				for policy_file in policy[sensors[sensor]['policy_type']]:
 					if policy_file in sensors[sensor]['policy_file']:
 						if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
-							print "{0:15s} : {1:20s} : {2:10s} : {3} ".format("", "", "modified", policy_file)
+							print "{0:15s} : {1:20s} : {2:7s}: {3:8s} : {4} ".format("", "", "", "modified", policy_file)
 					else:
-						print "{0:15s} : {1:20s} : {2:10s} : {3} ".format("", "", "missing", policy_file)
+						print "{0:15s} : {1:20s} : {2:7s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
 
 def main():
 	loaded = decision = None
@@ -198,7 +198,7 @@ def main():
 			try:
 				decision = input("\naction> ")
 			except Exception as e:
-				decision = 666
+				decision = None
 
 			if decision == 1:
 				loaded = get_status(sensors)
