@@ -46,11 +46,11 @@ IP Address      : Hostname             : Status
 
 Sample `check_policy` output:
 ```
-IP Address      : Hostname             : Issue      : File
+IP Address      : Hostname             : Policy : Issue      : File
 ------------------------------------------------------------------------------------------------------------------------
-192.168.8.180   : testhost3            :            :
-                :                      : modified   : testbro/intel/bro_intel.tsv
-                :                      : missing    : local.bro.example
-192.168.8.169   : testhost2            :            :
-192.168.8.168   : testhost1            :            :
+192.168.8.180   : testhost3            : phys   :            :
+                :                      :        : modified   : testbro/intel/bro_intel.tsv
+                :                      :        : missing    : local.bro.example
+192.168.8.169   : testhost2            : phys   :            :
+192.168.8.168   : testhost1            : virt   :            :
 ```
