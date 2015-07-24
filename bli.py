@@ -49,7 +49,7 @@ def populate_sensors(sensor, sensors):
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
 			sensors[line[0]] = {}
-			sensors[line[0]]['crashlogs']   = 0
+			sensors[line[0]]['crash_logs']   = 0
 			sensors[line[0]]['policy_file'] = {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
@@ -83,7 +83,7 @@ def get_status(sensors):
 				if "No such file" in line:
 					fnf_spool = 1
 			if not fnf_spool:
-				sensors[sensor]['crashlogs'] = int(stdout.readline().strip())
+				sensors[sensor]['crash_logs'] = int(stdout.readline().strip())
 
 			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[sensor]['prefix'], "bin", "broctl") + " status 2>&1")
 			for line in stdout.readlines():
@@ -108,9 +108,9 @@ def get_status(sensors):
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
-					sensors[sensor]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[sensor]['crashlogs']) + " crash logs)"
+					sensors[sensor]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
 				else:
-					sensors[sensor]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[sensor]['crashlogs']) + " crash logs)"
+					sensors[sensor]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
 			elif fnf_prefix and not fnf_spool:
 				sensors[sensor]['status'] = "Error (broctl not found; validate prefix setting)"
 			elif fnf_spool and not fnf_prefix:
@@ -135,7 +135,7 @@ def clear_logs(sensors):
 	cleared = 0
 
 	for sensor in sensors:
-		if sensors[sensor]['crashlogs'] > 0:
+		if sensors[sensor]['crash_logs'] > 0:
 			ssh = paramiko.SSHClient()
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -149,7 +149,7 @@ def clear_logs(sensors):
 				(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[sensor]['spooltmp'] + "/*crash")
 				ssh.close()
 				cleared += 1
-				print "\nLogs cleared from", sensor, "..."
+				print "\nLogs cleared from", sensor + "..."
 			except Exception as e:
 				sensors[sensor]['status'] = "Error (" + str(e) + ")"
 
