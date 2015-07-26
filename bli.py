@@ -122,7 +122,7 @@ def get_status(sensors):
 			sensors[sensor]['status'] = "Error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
-	return 1
+	return True
 
 def print_status(sensors):
 	print "\n{0:15s} : {1:20s} : {2}".format("IP Address", "Hostname", "Status")
@@ -224,7 +224,7 @@ def main():
 			elif decision == 0:
 				print "\nExiting..."
 			else:
-				if loaded:
+				if loaded == True:
 					if decision == 2:
 						print_status(sensors)
 						raw_input("\n<Press Enter to continue>")
