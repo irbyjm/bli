@@ -186,18 +186,18 @@ def check_policy(sensors):
 					line[1] = line[1].split(os.path.join(bli_path, "deploy", pol, "site/"))[1]
 					policy[pol][line[1]] = line[0]
 
-				print "\n{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4}".format("IP Address", "Hostname", "Policy", "Issue", "File")
-				print "-"*120
+			print "\n{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4}".format("IP Address", "Hostname", "Policy", "Issue", "File")
+			print "-"*120
 
-				for sensor in sorted(sensors):
-					if "Error" not in sensors[sensor]['status']:
-						print "{0:15s} : {1:20s} : {2:6s} : {3:8s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "")
-						for policy_file in policy[sensors[sensor]['policy_type']]:
-							if policy_file in sensors[sensor]['policy_file']:
-								if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
-									print "{0:15s} : {1:20s} : {2:7s}: {3:8s} : {4} ".format("", "", "", "modified", policy_file)
-								else:
-									print "{0:15s} : {1:20s} : {2:7s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
+			for sensor in sorted(sensors):
+				if "Error" not in sensors[sensor]['status']:
+					print "{0:15s} : {1:20s} : {2:6s} : {3:8s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "")
+					for policy_file in policy[sensors[sensor]['policy_type']]:
+						if policy_file in sensors[sensor]['policy_file']:
+							if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
+								print "{0:15s} : {1:20s} : {2:7s}: {3:8s} : {4} ".format("", "", "", "modified", policy_file)
+						else:
+							print "{0:15s} : {1:20s} : {2:7s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
