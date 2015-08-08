@@ -18,7 +18,7 @@ Sample `sensor.csv`
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
 127.0.0.1,localhost,,,,
-192.168.8.168,testhost1,root,/usr/local/bro,,
+192.168.8.168,testhost1,root,/usr/local/bro,,virt
 192.168.8.169,testhost2,root,/usr/local/bro,,
 #192.168.8.155,testhost4,root,/usr/local/bro,,
 192.168.8.180,testhost3,,,,
@@ -46,11 +46,12 @@ IP Address      : Hostname             : Status
 
 Sample `check_policy` output:
 ```
-IP Address      : Hostname             : Policy : Issue      : File
+IP Address      : Hostname             : Policy : Issue      : File/Details
 ------------------------------------------------------------------------------------------------------------------------
 192.168.8.180   : testhost3            : phys   :            :
                 :                      :        : modified   : testbro/intel/bro_intel.tsv
                 :                      :        : missing    : local.bro.example
 192.168.8.169   : testhost2            : phys   :            :
 192.168.8.168   : testhost1            : virt   :            :
+                :                      :        : error	     : deployment information for policy 'virt' does not exist
 ```
