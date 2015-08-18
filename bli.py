@@ -140,6 +140,8 @@ def clear_logs(sensors):
 		if sensors[sensor]['crash_logs'] > 0:
 			if purge != True:
 				decision = raw_input("\nClear logs from "+sensor+"? ([y]es] / [n]o / [a]ll) ")
+				if decision == "a":
+					purge = True
 
 			if purge == True or decision == "y":
 				ssh = paramiko.SSHClient()
@@ -159,10 +161,10 @@ def clear_logs(sensors):
 				except Exception as e:
 					sensors[sensor]['status'] = "Error (" + str(e) + ")"
 			elif decision == "n":
-				print "\nSkipping", sensor
+				print "\nSkipping", sensor+"..."
 
 	if cleared == 0:
-		print "\nNo log(s) cleared..."
+		print "\nNo logs cleared."
 
 def check_policy(sensors):
 	stdout = subprocess.Popen(
