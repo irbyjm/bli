@@ -219,14 +219,17 @@ def check_policy(sensors):
 						for policy_file in policy[sensors[sensor]['policy_type']]:
 							if policy_file in sensors[sensor]['policy_file']:
 								if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
-									print "{0:15s} : {1:20s} : {2:7s}: {3:8s} : {4} ".format("", "", "", "modified", policy_file)
+									print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4} ".format("", "", "", "modified", policy_file)
 							else:
 								if policy_file != "error":
-									print "{0:15s} : {1:20s} : {2:7s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
+									print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
 					else:
 						print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4} ".format("", "", "", "error", "policy '"+sensors[sensor]['policy_type']+"' not defined in bli configuration")
 				else:
 					print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4} ".format("", "", "", "error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
+			else:
+				print "{0:15s} : {1:20s} : {2:6s} : {3:8s} :".format(sensor, sensors[sensor]['hostname'], "--", "--")
+
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
@@ -235,7 +238,10 @@ def print_info(sensors):
 	print "-"*120
 
 	for sensor in sorted(sensors):
-		print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['version']['bro'], sensors[sensor]['version']['broctl'])
+		if "Error" not in sensors[sensor]['status']:
+			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['version']['bro'], sensors[sensor]['version']['broctl'])
+		else:
+			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], "--", "--")
 
 def main():
 	loaded = decision = None
