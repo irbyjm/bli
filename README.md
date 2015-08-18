@@ -14,7 +14,7 @@ bli.py	sensor.csv	./deploy
 			...			 ...
 ```
 
-Sample `sensor.csv`
+Sample `sensor.csv`:
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
 127.0.0.1,localhost,,,,
