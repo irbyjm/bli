@@ -50,10 +50,10 @@ def populate_sensors(sensor, sensors):
 
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
-			sensors[line[0]] 				= {}
+			sensors[line[0]] 		= {}
 			sensors[line[0]]['crash_logs']  = 0
 			sensors[line[0]]['policy_file'] = {}
-			sensors[line[0]]['version']		= {}
+			sensors[line[0]]['version']	= {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
