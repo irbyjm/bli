@@ -20,6 +20,7 @@ def print_usage():
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
 	print "  {0:20s} print downstream config".format("config")
+	print "  {0:20s} print downstream info (version, et al)".format("info")
 	print "  {0:20s} clear crash logs".format("clear_logs")
 	print "  {0:20s} check policy".format("check_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
@@ -32,6 +33,7 @@ def menu():
 	print "|{0:28s}|".format(" (2) Print status")
 	print "|{0:28s}|".format(" (3) Clear crash logs")
 	print "|{0:28s}|".format(" (4) Check policy")
+	print "|{0:28s}|".format(" (8) Print information")
 	print "|{0:28s}|".format(" (9) Print configuration")
 	print "|{0:28s}|".format(" (0) Quit")
 	print "-"*30
@@ -48,9 +50,10 @@ def populate_sensors(sensor, sensors):
 
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
-			sensors[line[0]] = {}
-			sensors[line[0]]['crash_logs']   = 0
+			sensors[line[0]] 				= {}
+			sensors[line[0]]['crash_logs']  = 0
 			sensors[line[0]]['policy_file'] = {}
+			sensors[line[0]]['version']		= {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
@@ -105,6 +108,10 @@ def get_status(sensors):
 				line = line.strip().split()
 				line[1] = line[1].split(os.path.join(sensors[sensor]['prefix'], "share", "bro", "site/"))
 				sensors[sensor]['policy_file'][line[1][-1]] = line[0]
+
+			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[sensor]['prefix'], "bin", "bro") + " --version 2>&1; " + os.path.join(sensors[sensor]['prefix'], "bin", "broctl") + " help |grep -i version 2>&1")
+			sensors[sensor]['version']['bro'] = stdout.readline().strip().split(' ')[-1]
+			sensors[sensor]['version']['broctl'] = stdout.readline().strip().split(' ')[-1]
 
 			if not fnf_prefix and not fnf_spool:
 				if running == lines:
@@ -223,6 +230,13 @@ def check_policy(sensors):
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
+def print_info(sensors):
+	print "\n{0:15s} : {1:20s} : {2:11s} : {3:10s}".format("IP Address", "Hostname", "Bro Version", "Broctl Version")
+	print "-"*120
+
+	for sensor in sorted(sensors):
+		print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['version']['bro'], sensors[sensor]['version']['broctl'])
+
 def main():
 	loaded = decision = None
 	sensors = {}
@@ -256,6 +270,9 @@ def main():
 					elif decision == 4:
 						check_policy(sensors)
 						raw_input("\n<Press Enter to continue>")
+					elif decision == 8:
+						print_info(sensors)
+						raw_input("\n<Press Enter to continue>")
 				else:
 					print "\nStatus not yet loaded (get status)"
 
@@ -265,6 +282,9 @@ def main():
 			print_status(sensors)
 		elif sys.argv[1] == "config":
 			print_config(sensors)
+		elif sys.argv[1] == "info":
+			get_status(sensors)
+			print_info(sensors)
 		elif sys.argv[1] == "clear_logs":
 			get_status(sensors)
 			clear_logs(sensors)
