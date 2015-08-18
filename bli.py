@@ -133,25 +133,33 @@ def print_status(sensors):
 
 def clear_logs(sensors):
 	cleared = 0
+	purge = False
 
 	for sensor in sensors:
+		decision = None
 		if sensors[sensor]['crash_logs'] > 0:
-			ssh = paramiko.SSHClient()
-			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			if purge != True:
+				decision = raw_input("\nClear logs from "+sensor+"? ([y]es] / [n]o / [a]ll) ")
 
-			try:
-				ssh.connect(
-					sensor,
-					username = sensors[sensor]['ssh_user'],
-					key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
-					timeout = 10
-				)
-				(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[sensor]['spooltmp'] + "/*crash")
-				ssh.close()
-				cleared += 1
-				print "\nLogs cleared from", sensor + "..."
-			except Exception as e:
-				sensors[sensor]['status'] = "Error (" + str(e) + ")"
+			if purge == True or decision == "y":
+				ssh = paramiko.SSHClient()
+				ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+				try:
+					ssh.connect(
+						sensor,
+						username = sensors[sensor]['ssh_user'],
+						key_filename = os.path.expanduser(os.path.join("~", 	".ssh", "id_rsa.pub")),
+						timeout = 10
+						)
+					(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[sensor]['spooltmp'] + "/*crash")
+					ssh.close()
+					cleared += 1
+					print "\nLogs cleared from", sensor + "..."
+				except Exception as e:
+					sensors[sensor]['status'] = "Error (" + str(e) + ")"
+			elif decision == "n":
+				print "\nSkipping", sensor
 
 	if cleared == 0:
 		print "\nNo log(s) cleared..."
@@ -223,7 +231,7 @@ def main():
 			menu()
 
 			try:
-				decision = input("\naction> ")
+				decision = int(raw_input("\naction> "))
 			except Exception as e:
 				decision = None
 
