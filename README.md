@@ -14,7 +14,7 @@ bli.py	sensor.csv	./deploy
 			...			 ...
 ```
 
-Sample `sensor.csv`
+Sample `sensor.csv`:
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
 127.0.0.1,localhost,,,,
@@ -54,4 +54,11 @@ IP Address      : Hostname             : Policy : Issue      : File/Details
 192.168.8.169   : testhost2            : phys   :            :
 192.168.8.168   : testhost1            : virt   :            :
                 :                      :        : error	     : deployment information for policy 'virt' does not exist
+```
+
+Sample `info` output:
+```
+IP Address      : Hostname             : Bro Version : Broctl Version
+------------------------------------------------------------------------------------------------------------------------
+127.0.0.1       : localhost            : 2.4-87      : 1.4-28
 ```
