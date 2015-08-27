@@ -142,7 +142,7 @@ def clear_logs(sensors):
 	cleared = 0
 	purge = False
 
-	for sensor in sensors:
+	for sensor in sorted(sensors):
 		decision = None
 		if sensors[sensor]['crash_logs'] > 0:
 			if purge != True:
