@@ -228,7 +228,7 @@ def check_policy(sensors):
 				else:
 					print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4} ".format("", "", "", "error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
 			else:
-				print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4}".format(sensor, sensors[sensor]['hostname'], "--", "--", "--")
+				print "{0:15s} : {1:20s} : {2:6s} : {3:8s} : {4}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "--", "--")
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
