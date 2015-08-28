@@ -45,6 +45,16 @@ IP Address      : Hostname             : Status
 192.168.8.180   : testhost3            : Unhealthy (21 running, 0 stopped, 1 crashed, 383 crash logs)
 ```
 
+Sample `info` output:
+```
+IP Address      : Hostname             : Bro Version : Broctl Version
+------------------------------------------------------------------------------------------------------------------------
+127.0.0.1       : localhost            : --          : --
+192.168.8.168   : testhost1            : 2.3         : 1.3
+192.168.8.169   : testhost2            : 2.4         : 1.4
+192.168.8.180   : testhost3            : 2.4-87      : 1.4-28
+```
+
 Sample `check_policy` output:
 ```
 IP Address      : Hostname             : Policy : Issue      : File/Details
@@ -56,14 +66,4 @@ IP Address      : Hostname             : Policy : Issue      : File/Details
 192.168.8.180   : testhost3            : phys   :            :
                 :                      :        : modified   : testbro/intel/bro_intel.tsv
                 :                      :        : missing    : local.bro.example
-```
-
-Sample `info` output:
-```
-IP Address      : Hostname             : Bro Version : Broctl Version
-------------------------------------------------------------------------------------------------------------------------
-127.0.0.1       : localhost            : --          : --
-192.168.8.168   : testhost1            : 2.3         : 1.3
-192.168.8.169   : testhost2            : 2.4         : 1.4
-192.168.8.180   : testhost3            : 2.4-87      : 1.4-28
 ```
