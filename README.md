@@ -57,13 +57,13 @@ IP Address      : Hostname             : Bro Version : Broctl Version
 
 Sample `check_policy` output:
 ```
-IP Address      : Hostname             : Policy : Issue      : File/Details
+IP Address      : Hostname             : Policy    : Issue      : File/Details
 ------------------------------------------------------------------------------------------------------------------------
-127.0.0.1       : localhost            : phys   : --         : --
-192.168.8.168   : testhost1            : virt   :            :
-                :                      :        : error	     : deployment information for policy 'virt' does not exist
-192.168.8.169   : testhost2            : phys   :            :
-192.168.8.180   : testhost3            : phys   :            :
-                :                      :        : modified   : testbro/intel/bro_intel.tsv
-                :                      :        : missing    : local.bro.example
+127.0.0.1       : localhost            : devel     : --         : --
+192.168.8.168   : testhost1            : virt-hub  :            :
+                :                      :           : error      : deployment information for policy 'virt' does not exist
+192.168.8.169   : testhost2            : phys-int  :            :
+192.168.8.180   : testhost3            : phys-dist :            :
+                :                      :           : modified   : testbro/intel/bro_intel.tsv
+                :                      :           : missing    : local.bro.example
 ```

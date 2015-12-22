@@ -13,7 +13,7 @@ sensor_file = "sensor.csv"
 ssh_user    = "broadmin"
 prefix      = "/opt/bro"
 spooltmp    = "/data/bro/spool/tmp"
-policy_type = "virt"
+policy_type = "virt-post"
 
 def print_usage():
 	print "Usage: bli.py [OPTION]"
