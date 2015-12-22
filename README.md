@@ -29,10 +29,10 @@ Sample `config` output:
 ```
 IP Address      : Hostname             : User       : Prefix               : SpoolTmp             : Policy
 ------------------------------------------------------------------------------------------------------------------------
-127.0.0.1       : localhost            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : phys
-192.168.8.168   : testhost1            : root       : /usr/local/bro       : /data/bro/spool/tmp  : virt
-192.168.8.169   : testhost2            : root       : /usr/local/bro       : /data/bro/spool/tmp  : phys
-192.168.8.180   : testhost3            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : phys
+127.0.0.1       : localhost            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : devel
+192.168.8.168   : testhost1            : root       : /usr/local/bro       : /data/bro/spool/tmp  : virt-hub
+192.168.8.169   : testhost2            : root       : /usr/local/bro       : /data/bro/spool/tmp  : phys-int
+192.168.8.180   : testhost3            : broadmin   : /opt/bro             : /data/bro/spool/tmp  : phys-dist
 ```
 
 Sample `status` output:
