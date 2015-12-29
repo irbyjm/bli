@@ -244,7 +244,7 @@ def check_policy(sensors):
 				first_print = False
 
 			if first_print == True:
-				print "{0:8s} : {1}".format("", "")
+				print "{0:8s} : {1}".format("ok", "")
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
