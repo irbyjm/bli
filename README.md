@@ -18,11 +18,11 @@ bli.py	sensor.csv	./deploy
 Sample `sensor.csv`:
 ```
 #ip,hostname,ssh_user,prefix,spooltmp,policy
-127.0.0.1,localhost,,,,
-192.168.8.168,testhost1,root,/usr/local/bro,,virt
-192.168.8.169,testhost2,root,/usr/local/bro,,
+127.0.0.1,localhost,,,,devel
+192.168.8.168,testhost1,root,/usr/local/bro,,virt-hub
+192.168.8.169,testhost2,root,/usr/local/bro,,phys-int
 #192.168.8.155,testhost4,root,/usr/local/bro,,
-192.168.8.180,testhost3,,,,
+192.168.8.180,testhost3,,,,phys-dist
 ```
 
 Sample `config` output:
