@@ -237,7 +237,7 @@ def check_policy(sensors):
 						print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "error", "policy '"+sensors[sensor]['policy_type']+"' not defined in bli configuration")
 						first_print = False
 				else:
-					print "{0:8s} : {1} ".format("error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
+					print "{0:8s} : {1} ".format("warning", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
 					first_print = False
 			else:
 				print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "--", "--")
