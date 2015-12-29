@@ -39,10 +39,10 @@ Sample `status` output:
 ```
 IP Address      : Hostname             : Status
 ------------------------------------------------------------------------------------------------------------------------
-127.0.0.1       : localhost            : Error ([Errno 111] Connection refused)
-192.168.8.168   : testhost1            : OK (0 warnings, 29 crash logs)
-192.168.8.169   : testhost2            : OK (0 warnings, 14 crash logs)
-192.168.8.180   : testhost3            : Unhealthy (21 running, 0 stopped, 1 crashed, 383 crash logs)
+127.0.0.1       : localhost            : error ([Errno 111] Connection refused)
+192.168.8.168   : testhost1            : ok (0 warnings, 29 crash logs)
+192.168.8.169   : testhost2            : ok (0 warnings, 14 crash logs)
+192.168.8.180   : testhost3            : unhealthy (21 running, 0 stopped, 1 crashed, 383 crash logs)
 ```
 
 Sample `info` output:
@@ -60,10 +60,8 @@ Sample `check_policy` output:
 IP Address      : Hostname             : Policy    : Issue      : File/Details
 ------------------------------------------------------------------------------------------------------------------------
 127.0.0.1       : localhost            : devel     : --         : --
-192.168.8.168   : testhost1            : virt-hub  :            :
-                :                      :           : error      : deployment information for policy 'virt' does not exist
+192.168.8.168   : testhost1            : virt-hub  : error      : deployment information for policy 'virt' does not exist
 192.168.8.169   : testhost2            : phys-int  :            :
-192.168.8.180   : testhost3            : phys-dist :            :
-                :                      :           : modified   : testbro/intel/bro_intel.tsv
+192.168.8.180   : testhost3            : phys-dist : modified   : testbro/intel/bro_intel.tsv
                 :                      :           : missing    : local.bro.example
 ```
