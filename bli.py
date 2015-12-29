@@ -50,10 +50,10 @@ def populate_sensors(sensor, sensors):
 
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
-			sensors[line[0]] 		= {}
+			sensors[line[0]] 				= {}
 			sensors[line[0]]['crash_logs']  = 0
 			sensors[line[0]]['policy_file'] = {}
-			sensors[line[0]]['version']	= {}
+			sensors[line[0]]['version']		= {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
@@ -79,13 +79,14 @@ def get_status(sensors):
 				key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 				timeout = 10
 			)
-			lines = running = stopped = crashed = warnings = fnf_prefix = fnf_spool = 0
+			lines = running = stopped = crashed = warnings = 0
+			fnf_prefix = fnf_spool = False
 
 			(stdin, stdout, stderr) = ssh.exec_command("ls " + sensors[sensor]['spooltmp'] + "|grep crash |wc -l")
 			for line in stderr.readlines():
 				if "No such file" in line:
-					fnf_spool = 1
-			if not fnf_spool:
+					fnf_spool = True
+			if fnf_spool == False:
 				sensors[sensor]['crash_logs'] = int(stdout.readline().strip())
 
 			(stdin, stdout, stderr) = ssh.exec_command(os.path.join(sensors[sensor]['prefix'], "bin", "broctl") + " status 2>&1")
@@ -93,7 +94,7 @@ def get_status(sensors):
 				if "warning" in line:
 					warnings += 1
 				if "No such file" in line:
-					fnf_prefix = 1
+					fnf_prefix = True
 				if "manager" in line or "proxy" in line or "worker" in line or "standalone" in line:
 					lines += 1
 					if "running" in line:
@@ -113,20 +114,20 @@ def get_status(sensors):
 			sensors[sensor]['version']['bro'] = stdout.readline().strip().split(' ')[-1]
 			sensors[sensor]['version']['broctl'] = stdout.readline().strip().split(' ')[-1]
 
-			if not fnf_prefix and not fnf_spool:
+			if fnf_prefix == False and fnf_spool == False:
 				if running == lines:
-					sensors[sensor]['status'] = "OK (" + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
+					sensors[sensor]['status'] = "ok (" + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
 				else:
-					sensors[sensor]['status'] = "Unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
-			elif fnf_prefix and not fnf_spool:
-				sensors[sensor]['status'] = "Error (broctl not found; validate prefix setting)"
-			elif fnf_spool and not fnf_prefix:
-				sensors[sensor]['status'] = "Error (Bro spool not found; validate spooltmp setting)"
-			elif fnf_prefix and fnf_spool:
-				sensors[sensor]['status'] = "Error (broctl and spool not found; validate path settings)"
+					sensors[sensor]['status'] = "unhealthy (" + str(running) + " running, " + str(stopped) + " stopped, " + str(crashed) + " crashed, " + str(warnings) + " warnings, " + str(sensors[sensor]['crash_logs']) + " crash logs)"
+			elif fnf_prefix == True and fnf_spool == False:
+				sensors[sensor]['status'] = "error (broctl not found; validate prefix setting)"
+			elif fnf_spool == True and fnf_prefix == False:
+				sensors[sensor]['status'] = "error (Bro spool not found; validate spooltmp setting)"
+			elif fnf_prefix == True and fnf_spool == True:
+				sensors[sensor]['status'] = "error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
-			sensors[sensor]['status'] = "Error (" + str(e) + ")"
+			sensors[sensor]['status'] = "error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
 	return True
@@ -158,7 +159,7 @@ def clear_logs(sensors):
 					ssh.connect(
 						sensor,
 						username = sensors[sensor]['ssh_user'],
-						key_filename = os.path.expanduser(os.path.join("~", 	".ssh", "id_rsa.pub")),
+						key_filename = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa.pub")),
 						timeout = 10
 						)
 					(stdin, stdout, stderr) = ssh.exec_command("rm -rf " + sensors[sensor]['spooltmp'] + "/*crash")
@@ -211,24 +212,39 @@ def check_policy(sensors):
 		print "-"*120
 
 		for sensor in sorted(sensors):
+			first_print = True
 			if "Error" not in sensors[sensor]['status']:
-				print "{0:15s} : {1:20s} : {2:9s} : {3:8s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "")
+				print "{0:15s} : {1:20s} : {2:9s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type']),
 
 				if policy[sensors[sensor]['policy_type']]['error'] == False:
 					if sensors[sensor]['policy_type'] in policies:
 						for policy_file in policy[sensors[sensor]['policy_type']]:
 							if policy_file in sensors[sensor]['policy_file']:
 								if policy[sensors[sensor]['policy_type']][policy_file] != sensors[sensor]['policy_file'][policy_file]:
-									print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "modified", policy_file)
+									if first_print == False:
+										print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "modified", policy_file)
+									else:
+										print "{0:8s} : {1}".format("modified", policy_file)
+										first_print = False
 							else:
 								if policy_file != "error":
-									print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
+									if first_print == False:
+										print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "missing", policy_file)
+									else:
+										print "{0:8s} : {1}".format("missing", policy_file)
+										first_print = False
 					else:
 						print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "error", "policy '"+sensors[sensor]['policy_type']+"' not defined in bli configuration")
+						first_print = False
 				else:
-					print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
+					print "{0:8s} : {1} ".format("error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
+					first_print = False
 			else:
 				print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "--", "--")
+				first_print = False
+
+			if first_print == True:
+				print "{0:8s} : {1}".format("", "")
 	else:
 		print "\nPolicy validation unavailable due to lack of deployment data"
 
