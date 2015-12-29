@@ -20,7 +20,7 @@ def print_usage():
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
 	print "  {0:20s} print downstream config".format("config")
-	print "  {0:20s} print downstream info (version, et al)".format("info")
+	print "  {0:20s} print downstream info (version, et al.)".format("info")
 	print "  {0:20s} clear crash logs".format("clear_logs")
 	print "  {0:20s} check policy".format("check_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
