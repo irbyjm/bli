@@ -50,10 +50,10 @@ def populate_sensors(sensor, sensors):
 
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
-			sensors[line[0]] 				= {}
+			sensors[line[0]] 		= {}
 			sensors[line[0]]['crash_logs']  = 0
 			sensors[line[0]]['policy_file'] = {}
-			sensors[line[0]]['version']		= {}
+			sensors[line[0]]['version']	= {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
@@ -127,7 +127,10 @@ def get_status(sensors):
 				sensors[sensor]['status'] = "error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
-			sensors[sensor]['status'] = "error (" + str(e) + ")"
+			if "invalid literal for int()" in str(e):
+				sensors[sensor]['status'] = "warning (password expired)"
+			else:
+				sensors[sensor]['status'] = "error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
 	return True
@@ -167,7 +170,7 @@ def clear_logs(sensors):
 					cleared += 1
 					print "\nLogs cleared from", sensor + "..."
 				except Exception as e:
-					sensors[sensor]['status'] = "Error (" + str(e) + ")"
+					sensors[sensor]['status'] = "error (" + str(e) + ")"
 			elif decision == "n":
 				print "\nSkipping", sensor+"..."
 
@@ -213,7 +216,7 @@ def check_policy(sensors):
 
 		for sensor in sorted(sensors):
 			first_print = True
-			if "Error" not in sensors[sensor]['status']:
+			if "error" not in sensors[sensor]['status'] and "warning " not in sensors[sensor]['status']:
 				print "{0:15s} : {1:20s} : {2:9s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type']),
 
 				if policy[sensors[sensor]['policy_type']]['error'] == False:
@@ -253,7 +256,7 @@ def print_info(sensors):
 	print "-"*120
 
 	for sensor in sorted(sensors):
-		if "Error" not in sensors[sensor]['status']:
+		if "error" not in sensors[sensor]['status'] and "warning " not in sensors[sensor]['status']:
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['version']['bro'], sensors[sensor]['version']['broctl'])
 		else:
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], "--", "--")
