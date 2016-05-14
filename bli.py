@@ -236,6 +236,14 @@ def check_policy(sensors):
 									else:
 										print "{0:8s} : {1}".format("missing", policy_file)
 										first_print = False
+						for external_file in sensors[sensor]['policy_file']:
+							if external_file not in policy[sensors[sensor]['policy_type']]:
+								if first_print == False:
+									print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "extra", external_file)
+								else:
+									print "{0:8s} : {1}".format("extra", external_file)
+									first_print = False
+
 					else:
 						print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "error", "policy '"+sensors[sensor]['policy_type']+"' not defined in bli configuration")
 						first_print = False
