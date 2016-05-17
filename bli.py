@@ -270,7 +270,7 @@ def print_info(sensors):
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], "--", "--")
 
 def main():
-	loaded = decision = pol_loaded = None
+	loaded = decision = None
 	sensors = {}
 	get_sensors(sensors)
 
