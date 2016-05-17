@@ -270,7 +270,7 @@ def print_info(sensors):
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], "--", "--")
 
 def main():
-	loaded = decision = None
+	loaded = decision = pol_loaded = None
 	sensors = {}
 	get_sensors(sensors)
 
@@ -284,7 +284,13 @@ def main():
 				decision = None
 
 			if decision == 1:
-				loaded = get_status(sensors)
+				if loaded == True:
+					repull = raw_input("\nPurge current sensor data? ([y]es] / [n]o)")
+					if repull == "y":
+						get_sensors(sensors)
+						get_status(sensors)
+				else:
+					loaded = get_status(sensors)
 				raw_input("\n<Press Enter to continue>")
 			elif decision == 9:
 				print_config(sensors)
