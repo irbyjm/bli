@@ -20,7 +20,7 @@ def print_usage():
 	print "Options:"
 	print "  {0:20s} print downstream health".format("status")
 	print "  {0:20s} print downstream config".format("config")
-	print "  {0:20s} print downstream info (version, et al)".format("info")
+	print "  {0:20s} print downstream info (version, et al.)".format("info")
 	print "  {0:20s} clear crash logs".format("clear_logs")
 	print "  {0:20s} check policy".format("check_policy")
 	print "  {0:20s} give this help list".format("-?, --help")
@@ -50,10 +50,10 @@ def populate_sensors(sensor, sensors):
 
 		if line[0][0] != "#":
 			line[-1] = line[-1].strip()
-			sensors[line[0]] 				= {}
+			sensors[line[0]] 		= {}
 			sensors[line[0]]['crash_logs']  = 0
 			sensors[line[0]]['policy_file'] = {}
-			sensors[line[0]]['version']		= {}
+			sensors[line[0]]['version']	= {}
 			sensors[line[0]]['hostname']    = line[1]
 			sensors[line[0]]['ssh_user']    = line[2] if line[2] else ssh_user
 			sensors[line[0]]['prefix']      = line[3] if line[3] else prefix
@@ -106,7 +106,7 @@ def get_status(sensors):
 
 			(stdin, stdout, stderr) = ssh.exec_command("find " +  os.path.join(sensors[sensor]['prefix'], "share", "bro", "site", "*") + " -exec md5sum '{}' \;")
 			for line in stdout.readlines():
-				line = line.strip().split()
+				line = line.strip().split(' ', 1)
 				line[1] = line[1].split(os.path.join(sensors[sensor]['prefix'], "share", "bro", "site/"))
 				sensors[sensor]['policy_file'][line[1][-1]] = line[0]
 
@@ -127,7 +127,10 @@ def get_status(sensors):
 				sensors[sensor]['status'] = "error (broctl and spool not found; validate path settings)"
 			ssh.close()
 		except Exception as e:
-			sensors[sensor]['status'] = "error (" + str(e) + ")"
+			if "invalid literal for int()" in str(e):
+				sensors[sensor]['status'] = "warning (password expired)"
+			else:
+				sensors[sensor]['status'] = "error (" + str(e) + ")"
 
 	print "\nStatus loaded..."
 	return True
@@ -167,7 +170,7 @@ def clear_logs(sensors):
 					cleared += 1
 					print "\nLogs cleared from", sensor + "..."
 				except Exception as e:
-					sensors[sensor]['status'] = "Error (" + str(e) + ")"
+					sensors[sensor]['status'] = "error (" + str(e) + ")"
 			elif decision == "n":
 				print "\nSkipping", sensor+"..."
 
@@ -213,7 +216,7 @@ def check_policy(sensors):
 
 		for sensor in sorted(sensors):
 			first_print = True
-			if "Error" not in sensors[sensor]['status']:
+			if "error" not in sensors[sensor]['status'] and "warning " not in sensors[sensor]['status']:
 				print "{0:15s} : {1:20s} : {2:9s} :".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type']),
 
 				if policy[sensors[sensor]['policy_type']]['error'] == False:
@@ -233,11 +236,19 @@ def check_policy(sensors):
 									else:
 										print "{0:8s} : {1}".format("missing", policy_file)
 										first_print = False
+						for external_file in sensors[sensor]['policy_file']:
+							if external_file not in policy[sensors[sensor]['policy_type']]:
+								if first_print == False:
+									print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "extra", external_file)
+								else:
+									print "{0:8s} : {1}".format("extra", external_file)
+									first_print = False
+
 					else:
 						print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4} ".format("", "", "", "error", "policy '"+sensors[sensor]['policy_type']+"' not defined in bli configuration")
 						first_print = False
 				else:
-					print "{0:8s} : {1} ".format("error", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
+					print "{0:8s} : {1} ".format("warning", "deployment information for policy '"+sensors[sensor]['policy_type']+"' does not exist")
 					first_print = False
 			else:
 				print "{0:15s} : {1:20s} : {2:9s} : {3:8s} : {4}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['policy_type'], "--", "--")
@@ -253,7 +264,7 @@ def print_info(sensors):
 	print "-"*120
 
 	for sensor in sorted(sensors):
-		if "Error" not in sensors[sensor]['status']:
+		if "error" not in sensors[sensor]['status'] and "warning " not in sensors[sensor]['status']:
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], sensors[sensor]['version']['bro'], sensors[sensor]['version']['broctl'])
 		else:
 			print "{0:15s} : {1:20s} : {2:11s} : {3:10s}".format(sensor, sensors[sensor]['hostname'], "--", "--")
@@ -273,7 +284,13 @@ def main():
 				decision = None
 
 			if decision == 1:
-				loaded = get_status(sensors)
+				if loaded == True:
+					repull = raw_input("\nPurge current sensor data? ([y]es] / [n]o)")
+					if repull == "y":
+						get_sensors(sensors)
+						get_status(sensors)
+				else:
+					loaded = get_status(sensors)
 				raw_input("\n<Press Enter to continue>")
 			elif decision == 9:
 				print_config(sensors)
