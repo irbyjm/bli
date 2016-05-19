@@ -106,7 +106,7 @@ def get_status(sensors):
 
 			(stdin, stdout, stderr) = ssh.exec_command("find " +  os.path.join(sensors[sensor]['prefix'], "share", "bro", "site", "*") + " -exec md5sum '{}' \;")
 			for line in stdout.readlines():
-				line = line.strip().split()
+				line = line.strip().split(' ', 1)
 				line[1] = line[1].split(os.path.join(sensors[sensor]['prefix'], "share", "bro", "site/"))
 				sensors[sensor]['policy_file'][line[1][-1]] = line[0]
 
