@@ -6,7 +6,7 @@ _Disclaimer: I have no afilliation with The Bro Project (http://www.bro.org)._
 - Centralized view of monitor versioning
 - Monitoring of deployments for policy changes
 
-## Install
+## Installation
 Sample directory structure
 ```
         <bli root>
